@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  identity-api:
+    build: .
+    ports:
+      - "9002:9002"
+    environment:
+      - JWT_TOKEN=${JWT_TOKEN}
+      - MONGO_DB_URL=mongodb://mongo:27017
+  mongo:
+    image: "mongo"
