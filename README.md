@@ -1,4 +1,4 @@
-# Identity API
+# Identity Service
 Handles the user identity, authentication, authorization.
 
 This is still very much WIP. For now it can authenticate existing users and give them a refresh token.
