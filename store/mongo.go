@@ -4,8 +4,8 @@ import "go.mongodb.org/mongo-driver/mongo"
 
 type MongoStore struct {
 	client *mongo.Client
-	User MongoUserStore
-	Token MongoTokenStore
+	User   MongoUserStore
+	Token  MongoTokenStore
 }
 
 func NewMongoStore(mongoClient *mongo.Client) MongoStore {

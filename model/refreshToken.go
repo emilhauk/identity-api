@@ -1,10 +1,16 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/dgrijalva/jwt-go"
+)
 
 type RefreshToken struct {
-	UserId string `bson:"user_id"`
-	Token string `bson:"token"`
-	Created primitive.Timestamp `bson:"created"`
-	Expires primitive.Timestamp `bson:"expires"`
+	UserId  string
+	RefreshTokenClaims
+}
+
+type RefreshTokenClaims struct {
+	Token string `json:"token"`
+	jwt.StandardClaims
+}
 }
