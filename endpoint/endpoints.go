@@ -7,8 +7,9 @@ import (
 )
 
 type Endpoints struct {
-	LoginHandler http.HandlerFunc
-	JwtHandler   http.HandlerFunc
+	LoginHandler  http.HandlerFunc
+	JwtHandler    http.HandlerFunc
+	LogoutHandler http.HandlerFunc
 }
 
 func NewEndpoints(store *store.MongoStore, config *config.Config) *Endpoints {
@@ -19,6 +20,9 @@ func NewEndpoints(store *store.MongoStore, config *config.Config) *Endpoints {
 		},
 		JwtHandler: func(w http.ResponseWriter, r *http.Request) {
 			JwtHandler(w, r, store, config.JwtSigningSecret)
+		},
+		LogoutHandler: func(w http.ResponseWriter, r *http.Request) {
+			LogoutHandler(w, r, store, config.JwtSigningSecret)
 		},
 	}
 
