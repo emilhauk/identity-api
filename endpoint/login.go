@@ -3,12 +3,11 @@ package endpoint
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emilhauk/identity-api/model"
 	"github.com/emilhauk/identity-api/store"
 	"github.com/emilhauk/identity-api/util"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
@@ -35,13 +34,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStor
 
 	claims, signedJwtToken, err := createRefreshToken(user, key)
 	if err != nil {
-		log.Println("Unable to create signed refresh token", err)
+		logrus.Println("Unable to create signed refresh token", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err = store.Token.SaveToken(user.ID, claims); err != nil {
-		log.Println("Unable to save refresh token", err)
+		logrus.Println("Unable to save refresh token", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -3,9 +3,9 @@ package store
 import (
 	"context"
 	"github.com/emilhauk/identity-api/model"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 type MongoTokenStore struct {
@@ -27,9 +27,9 @@ func (s *MongoTokenStore) SaveToken(id string, claims model.RefreshTokenClaims) 
 }
 
 func (s *MongoTokenStore) DeleteByToken(token string) error {
-	res, err := s.collection.DeleteOne(context.TODO(), bson.M{"token": token})
-	if res.DeletedCount == 0 {
-		log.Println("Deleted 0 rows...")
+	res, err := s.collection.DeleteOne(context.TODO(), bson.M{"refreshtokenclaims.token": token})
+	if err != nil && res.DeletedCount == 0 {
+		logrus.Warn("Deleted 0 rows...")
 	}
 	return err
 }

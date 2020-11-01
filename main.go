@@ -5,9 +5,9 @@ import (
 	"github.com/emilhauk/identity-api/config"
 	"github.com/emilhauk/identity-api/endpoint"
 	"github.com/emilhauk/identity-api/store"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"net/http"
 	"time"
 )
@@ -16,19 +16,22 @@ func setupRoutes(endpoints *endpoint.Endpoints) {
 	http.HandleFunc("/login", endpoints.LoginHandler)
 	http.HandleFunc("/jwt", endpoints.JwtHandler)
 	http.HandleFunc("/logout", endpoints.LogoutHandler)
+	http.HandleFunc("/", endpoints.WebHandler)
 }
 
 func main() {
 	c := config.NewConfig()
 
+	logrus.SetLevel(c.LogLevel)
+
 	mongoClient, err := mongo.NewClient(options.Client().ApplyURI(c.MongoDBUrl))
 	if err != nil {
-		log.Panic(err)
+		logrus.Panicln(err)
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = mongoClient.Connect(ctx)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatalln(err)
 	}
 	defer mongoClient.Disconnect(ctx)
 	mongoStore := store.NewMongoStore(mongoClient)
@@ -36,5 +39,7 @@ func main() {
 	endpoints := endpoint.NewEndpoints(&mongoStore, c)
 
 	setupRoutes(endpoints)
-	log.Fatal(http.ListenAndServe(c.Host, nil))
+
+	logrus.Infof("Identity-service listening on %s", c.Host)
+	logrus.Fatalln(http.ListenAndServe(c.Host, nil))
 }

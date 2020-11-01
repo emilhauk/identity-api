@@ -5,7 +5,7 @@ import (
 )
 
 type RefreshToken struct {
-	UserId  string
+	UserId string
 	RefreshTokenClaims
 }
 
@@ -15,7 +15,7 @@ type RefreshTokenClaims struct {
 }
 
 type UserTokenClaims struct {
-	Id string `json:"id,omitempty"`
+	Id   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 	jwt.StandardClaims
 }

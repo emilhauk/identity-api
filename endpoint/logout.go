@@ -4,7 +4,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emilhauk/identity-api/model"
 	"github.com/emilhauk/identity-api/store"
-	"log"
+	"github.com/emilhauk/identity-api/util"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -14,10 +15,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request, store *store.MongoSto
 		return
 	}
 
-	refreshTokenCookie, err := r.Cookie("refresh-token");
+	refreshTokenCookie, err := r.Cookie("refresh-token")
 	if err != nil || len(refreshTokenCookie.Value) == 0 {
-		log.Println("No refresh token present in cookie", r.Cookies())
-		w.WriteHeader(http.StatusBadRequest)
+		logrus.Debugln("refresh-token", err)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -26,19 +27,21 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request, store *store.MongoSto
 		return key, nil
 	})
 	if err != nil {
-		log.Println("Invalid refresh token", refreshTokenCookie.Value, err)
-		w.WriteHeader(http.StatusBadRequest)
+		logrus.Debugln("Invalid refresh token", err)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	err = store.Token.DeleteByToken(claims.Token)
 	if err != nil {
-		log.Println("Failed deletion of refresh token")
+		logrus.Errorln("Failed deletion of refresh token", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// TODO: Perform invalidation of lingering JWTs?
-
 	// TODO: Should also be able to delete specific keys
 
-	w.WriteHeader(http.StatusNoContent)
+	util.DeleteCookie(refreshTokenCookie, w)
+	w.WriteHeader(http.StatusOK)
 }
