@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+body, input, button {
+    font-size: 1.2rem;
+}
+
+form > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 300px;
+    max-width: 400px;
+    margin: 10px 0;
+}
+
+form > div > label {
+    margin-right: 10px;
+}
+
+form > div.form-action {
+    justify-content: flex-end;
+}
+
+@media screen and (max-width: 400px) {
+    form > div {
+        flex-direction: column;
+        align-items: flex-start;
+        min-width: auto;
+    }
+
+    .actions {
+        align-items: flex-end;
+    }
+}
+
+.actions {
+    justify-content: flex-end;
+}
+
+input, button {
+    padding: 5px;
+    border-radius: 5px;
+}
+
+button {
+    background: transparent;
+}
+
+.hidden {
+    display: none;
+}

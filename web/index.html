@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Identity Login</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-$END$
+<div class="main">
+    <div class="spinner"></div>
+    <div class="content">
+        <div class="login hidden">
+            <h1>Identity login</h1>
+            <form method="post" action="/login">
+                <div class="login__element">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username">
+                </div>
+                <div class="login__element">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password">
+                </div>
+                <div class="login__element form-action">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+        </div>
+        <div class="logout hidden">
+            <h1></h1>
+            <button data-action="logout">Logout</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="/entry.js"></script>
 </body>
 </html>

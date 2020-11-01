@@ -10,6 +10,7 @@ type Endpoints struct {
 	LoginHandler  http.HandlerFunc
 	JwtHandler    http.HandlerFunc
 	LogoutHandler http.HandlerFunc
+	WebHandler    http.HandlerFunc
 }
 
 func NewEndpoints(store *store.MongoStore, config *config.Config) *Endpoints {
@@ -23,6 +24,9 @@ func NewEndpoints(store *store.MongoStore, config *config.Config) *Endpoints {
 		},
 		LogoutHandler: func(w http.ResponseWriter, r *http.Request) {
 			LogoutHandler(w, r, store, config.JwtSigningSecret)
+		},
+		WebHandler: func(w http.ResponseWriter, r *http.Request) {
+			WebHandler(w, r)
 		},
 	}
 
