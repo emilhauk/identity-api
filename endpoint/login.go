@@ -18,15 +18,29 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStor
 		return
 	}
 
-	var credentials *model.Credentials
-	defer r.Body.Close()
-	err := json.NewDecoder(r.Body).Decode(&credentials)
+	err := r.ParseForm()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		logrus.Errorln(err)
+		w.WriteHeader(400)
 		return
 	}
 
-	user, err := store.User.FindByCredentials(credentials)
+	loginParams := model.LoginRequestParams{
+		RequestedUrl: r.Form.Get("requested_url"),
+		Credentials:  model.Credentials{
+			Username: r.Form.Get("username"),
+			Password: r.Form.Get("password"),
+		},
+	}
+	/*defer r.Body.Close()
+	err := http.Decjson.NewDecoder(r.Body).Decode(&loginParams)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}*/
+
+
+	user, err := store.User.FindByCredentials(&loginParams.Credentials)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -53,10 +67,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStor
 		Expires:  time.Unix(claims.ExpiresAt, 0),
 		Secure:   r.Host == "localhost",
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, &cookie)
-	w.WriteHeader(204)
+
+	logrus.Info(loginParams)
+
+	if loginParams.RequestedUrl != "" {
+		http.Redirect(w, r, loginParams.RequestedUrl, http.StatusFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func createRefreshToken(user model.User, key []byte) (claims model.RefreshTokenClaims, signedJwt string, err error) {

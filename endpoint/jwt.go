@@ -64,5 +64,6 @@ func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore,
 		userClaims,
 	).SignedString(key)
 	w.Header().Add("Authorization", signedJwt)
+	w.Header().Add("Access-Control-Expose-Headers", "Authorization")
 	w.WriteHeader(204)
 }
