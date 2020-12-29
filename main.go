@@ -13,6 +13,7 @@ import (
 )
 
 func setupRoutes(endpoints *endpoint.Endpoints) {
+	http.HandleFunc("/register", endpoints.RegisterHandler)
 	http.HandleFunc("/login", endpoints.LoginHandler)
 	http.HandleFunc("/jwt", endpoints.JwtHandler)
 	http.HandleFunc("/logout", endpoints.LogoutHandler)

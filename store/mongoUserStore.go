@@ -31,3 +31,11 @@ func (s *MongoUserStore) FindById(id string) (user model.User, err error) {
 	err = s.collection.FindOne(context.TODO(), bson.M{"_id": objectId}).Decode(&user)
 	return
 }
+
+func (s *MongoUserStore) Create(params model.RegisterRequestParams) (user model.User, err error) {
+	r, err := s.collection.InsertOne(context.TODO(), params)
+	if err != nil {
+		return user, err
+	}
+	return s.FindById(r.InsertedID.(primitive.ObjectID).Hex())
+}

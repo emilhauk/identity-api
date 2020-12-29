@@ -11,6 +11,7 @@ type Endpoints struct {
 	LogoutHandler http.HandlerFunc
 	WebHandler    http.HandlerFunc
 	PublicKeyHandler http.HandlerFunc
+	RegisterHandler http.HandlerFunc
 }
 
 func NewEndpoints(dbStore *store.MongoStore, keyStore *store.RSAKeyStore) *Endpoints {
@@ -30,6 +31,9 @@ func NewEndpoints(dbStore *store.MongoStore, keyStore *store.RSAKeyStore) *Endpo
 		},
 		PublicKeyHandler: func(w http.ResponseWriter, r *http.Request) {
 			PublicKeyHandler(w, r, keyStore)
+		},
+		RegisterHandler: func(w http.ResponseWriter, r *http.Request) {
+			RegisterHandler(w, r, dbStore)
 		},
 	}
 
