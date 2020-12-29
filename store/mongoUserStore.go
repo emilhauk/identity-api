@@ -13,9 +13,9 @@ type MongoUserStore struct {
 	collection *mongo.Collection
 }
 
-func (s *MongoUserStore) FindByCredentials(credentials *model.Credentials) (user model.User, err error) {
+func (s *MongoUserStore) FindByCredentials(credentials model.Credentials) (user model.User, err error) {
 	var userWithCredentials model.UserWithCredentials
-	err = s.collection.FindOne(context.TODO(), bson.M{"username": credentials.Username}).Decode(&userWithCredentials)
+	err = s.collection.FindOne(context.TODO(), bson.M{"email": credentials.Email}).Decode(&userWithCredentials)
 	if err != nil {
 		return user, err
 	}
@@ -23,11 +23,11 @@ func (s *MongoUserStore) FindByCredentials(credentials *model.Credentials) (user
 	if err != nil {
 		return user, err
 	}
-	return model.DowngradeToUser(userWithCredentials), nil
+	return model.DowngradeToUser(userWithCredentials), err
 }
 
 func (s *MongoUserStore) FindById(id string) (user model.User, err error) {
 	objectId, _ := primitive.ObjectIDFromHex(id)
 	err = s.collection.FindOne(context.TODO(), bson.M{"_id": objectId}).Decode(&user)
-	return user, err
+	return
 }

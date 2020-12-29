@@ -16,6 +16,7 @@ func setupRoutes(endpoints *endpoint.Endpoints) {
 	http.HandleFunc("/login", endpoints.LoginHandler)
 	http.HandleFunc("/jwt", endpoints.JwtHandler)
 	http.HandleFunc("/logout", endpoints.LogoutHandler)
+	http.HandleFunc("/keys", endpoints.PublicKeyHandler)
 	http.HandleFunc("/", endpoints.WebHandler)
 }
 
@@ -35,8 +36,8 @@ func main() {
 	}
 	defer mongoClient.Disconnect(ctx)
 	mongoStore := store.NewMongoStore(mongoClient)
-
-	endpoints := endpoint.NewEndpoints(&mongoStore, c)
+	keyStore := store.NewRSAKeyStore(c.KeyStorePath, c.DefaultKeyId)
+	endpoints := endpoint.NewEndpoints(&mongoStore, &keyStore)
 
 	setupRoutes(endpoints)
 

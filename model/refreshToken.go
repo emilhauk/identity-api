@@ -4,18 +4,20 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type RefreshToken struct {
-	UserId string
-	RefreshTokenClaims
+type RSAKeyIdentifier struct {
+	KID string `json:"kid"`
 }
 
 type RefreshTokenClaims struct {
 	Token string `json:"token"`
+	RSAKeyIdentifier
 	jwt.StandardClaims
 }
 
 type UserTokenClaims struct {
-	Id   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	UserId string `json:"user_id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	RSAKeyIdentifier
 	jwt.StandardClaims
 }

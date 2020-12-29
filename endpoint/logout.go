@@ -9,25 +9,21 @@ import (
 	"net/http"
 )
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore, key []byte) {
+func LogoutHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore, keyStore *store.RSAKeyStore) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
 	refreshTokenCookie, err := r.Cookie("refresh-token")
 	if err != nil || len(refreshTokenCookie.Value) == 0 {
-		logrus.Debugln("refresh-token", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	var claims model.RefreshTokenClaims
-	_, err = jwt.ParseWithClaims(refreshTokenCookie.Value, &claims, func(token *jwt.Token) (interface{}, error) {
-		return key, nil
-	})
+	_, err = jwt.ParseWithClaims(refreshTokenCookie.Value, &claims, util.Keyfunc(keyStore))
 	if err != nil {
-		logrus.Debugln("Invalid refresh token", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -40,7 +36,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request, store *store.MongoSto
 	}
 
 	// TODO: Perform invalidation of lingering JWTs?
-	// TODO: Should also be able to delete specific keys
+	// TODO: Should also be able to delete specific keys?
 
 	util.DeleteCookie(refreshTokenCookie, w)
 	w.WriteHeader(http.StatusOK)

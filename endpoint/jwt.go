@@ -4,16 +4,17 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emilhauk/identity-api/model"
 	"github.com/emilhauk/identity-api/store"
+	"github.com/emilhauk/identity-api/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
 
-func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore, key []byte) {
+func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore, keyStore *store.RSAKeyStore) {
 	w.Header().Add("Access-Control-Allow-Origin", "http://localhost:9000")
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -25,9 +26,7 @@ func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore,
 	}
 
 	var claims model.RefreshTokenClaims
-	_, err = jwt.ParseWithClaims(refreshTokenCookie.Value, &claims, func(token *jwt.Token) (interface{}, error) {
-		return key, nil
-	})
+	_, err = jwt.ParseWithClaims(refreshTokenCookie.Value, &claims, util.Keyfunc(keyStore))
 	if err != nil {
 		logrus.Println("Invalid refresh token", refreshTokenCookie.Value, err)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -41,7 +40,7 @@ func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore,
 		return
 	}
 
-	user, err := store.User.FindById(dbToken.UserId)
+	user, err := store.User.FindById(dbToken.Id)
 	if err != nil {
 		logrus.Println("User mentioned by db not in database")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -50,20 +49,21 @@ func JwtHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore,
 
 	now := time.Now()
 	userClaims := model.UserTokenClaims{
-		Id:   user.ID,
-		Name: user.Username,
+		UserId:           user.ID,
+		Email: 			  user.Email,
+		RSAKeyIdentifier: model.RSAKeyIdentifier{keyStore.DefaultKeyId},
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: now.Add(time.Duration(30 * time.Minute)).Unix(),
+			ExpiresAt: now.Add(30 * time.Minute).Unix(),
 			IssuedAt:  now.Unix(),
 			NotBefore: now.Unix(),
 		},
 	}
 
 	signedJwt, err := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
+		jwt.SigningMethodRS256,
 		userClaims,
-	).SignedString(key)
+	).SignedString(keyStore.GetDefaultKeyPair().Private)
 	w.Header().Add("Authorization", signedJwt)
 	w.Header().Add("Access-Control-Expose-Headers", "Authorization")
-	w.WriteHeader(204)
+	w.WriteHeader(201)
 }

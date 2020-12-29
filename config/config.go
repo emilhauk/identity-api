@@ -7,19 +7,20 @@ import (
 )
 
 type Config struct {
-	JwtSigningSecret []byte
-	MongoDBUrl       string
-	Host             string
-	LogLevel         logrus.Level
+	MongoDBUrl   string
+	Host         string
+	LogLevel     logrus.Level
+	KeyStorePath string
+	DefaultKeyId string
 }
 
 func NewConfig() *Config {
-	jwtPanicMessage := "JWT_TOKEN is required to start. Please supply a passphrase."
 	config := &Config{
-		JwtSigningSecret: []byte(getEnvOrPanic("JWT_TOKEN", jwtPanicMessage)),
-		MongoDBUrl:       getEnvWithFallback("MONGO_DB_URL", "mongodb://localhost:27017"),
-		Host:             getEnvWithFallback("HOST", ":9002"),
-		LogLevel:         getLogLevel(),
+		MongoDBUrl:   getEnvWithFallback("MONGO_DB_URL", "mongodb://localhost:27017"),
+		Host:         getEnvWithFallback("HOST", ":9002"),
+		LogLevel:     getLogLevel(),
+		KeyStorePath: getEnvOrFatal("KEY_STORE", "KEY_STORE path is required to start"),
+		DefaultKeyId: getEnvOrFatal("DEFAULT_KEY", "DEFAULT_KEY id is required to start"),
 	}
 	return config
 }
@@ -32,10 +33,10 @@ func getEnvWithFallback(key string, fallback string) string {
 	return value
 }
 
-func getEnvOrPanic(key string, message string) string {
-	value := os.Getenv("JWT_TOKEN")
+func getEnvOrFatal(key string, message string) string {
+	value := os.Getenv(key)
 	if len(value) == 0 {
-		logrus.Panic(message)
+		logrus.Fatalln(message)
 	}
 	return value
 }

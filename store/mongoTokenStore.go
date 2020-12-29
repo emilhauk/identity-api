@@ -12,22 +12,18 @@ type MongoTokenStore struct {
 	collection *mongo.Collection
 }
 
-func (s *MongoTokenStore) FindByToken(token string) (refreshToken model.RefreshToken, err error) {
-	err = s.collection.FindOne(context.TODO(), bson.D{{"refreshtokenclaims.token", token}}).Decode(&refreshToken)
-	return refreshToken, err
+func (s *MongoTokenStore) FindByToken(token string) (claims model.RefreshTokenClaims, err error) {
+	err = s.collection.FindOne(context.TODO(), bson.D{{"token", token}}).Decode(&claims)
+	return claims, err
 }
 
-func (s *MongoTokenStore) SaveToken(id string, claims model.RefreshTokenClaims) error {
-	refreshToken := model.RefreshToken{
-		UserId:             id,
-		RefreshTokenClaims: claims,
-	}
-	_, err := s.collection.InsertOne(context.TODO(), refreshToken)
+func (s *MongoTokenStore) SaveToken(claims model.RefreshTokenClaims) error {
+	_, err := s.collection.InsertOne(context.TODO(), claims)
 	return err
 }
 
 func (s *MongoTokenStore) DeleteByToken(token string) error {
-	res, err := s.collection.DeleteOne(context.TODO(), bson.M{"refreshtokenclaims.token": token})
+	res, err := s.collection.DeleteOne(context.TODO(), bson.M{"token": token})
 	if err != nil && res.DeletedCount == 0 {
 		logrus.Warn("Deleted 0 rows...")
 	}

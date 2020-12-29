@@ -12,49 +12,42 @@ import (
 	"time"
 )
 
-func LoginHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStore, key []byte) {
+func LoginHandler(w http.ResponseWriter, r *http.Request, dbStore *store.MongoStore, keyStore *store.RSAKeyStore) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
 	err := r.ParseForm()
 	if err != nil {
 		logrus.Errorln(err)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	loginParams := model.LoginRequestParams{
 		RequestedUrl: r.Form.Get("requested_url"),
 		Credentials:  model.Credentials{
-			Username: r.Form.Get("username"),
+			Email:    r.Form.Get("email"),
 			Password: r.Form.Get("password"),
 		},
 	}
-	/*defer r.Body.Close()
-	err := http.Decjson.NewDecoder(r.Body).Decode(&loginParams)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}*/
 
-
-	user, err := store.User.FindByCredentials(&loginParams.Credentials)
+	user, err := dbStore.User.FindByCredentials(loginParams.Credentials)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	claims, signedJwtToken, err := createRefreshToken(user, key)
+	claims, signedJwtToken, err := createRefreshToken(user, keyStore)
 	if err != nil {
-		logrus.Println("Unable to create signed refresh token", err)
+		logrus.Errorln("Unable to create signed refresh token.", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err = store.Token.SaveToken(user.ID, claims); err != nil {
-		logrus.Println("Unable to save refresh token", err)
+	if err = dbStore.Token.SaveToken(claims); err != nil {
+		logrus.Errorln("Unable to save refresh token.", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -81,7 +74,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, store *store.MongoStor
 	w.WriteHeader(http.StatusOK)
 }
 
-func createRefreshToken(user model.User, key []byte) (claims model.RefreshTokenClaims, signedJwt string, err error) {
+func createRefreshToken(user model.User, keyStore *store.RSAKeyStore) (claims model.RefreshTokenClaims, signedJwt string, err error) {
 	hash := sha256.New().Sum([]byte(util.RandomString(64)))
 	refreshToken := hex.EncodeToString(hash[:])
 	now := time.Now()
@@ -89,15 +82,17 @@ func createRefreshToken(user model.User, key []byte) (claims model.RefreshTokenC
 
 	claims = model.RefreshTokenClaims{
 		Token: refreshToken,
+		RSAKeyIdentifier: model.RSAKeyIdentifier{KID: keyStore.DefaultKeyId},
 		StandardClaims: jwt.StandardClaims{
+			Id: user.ID,
 			ExpiresAt: expires.Unix(),
 			IssuedAt:  now.Unix(),
 			NotBefore: now.Unix(),
 		},
 	}
 	signedJwt, err = jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
+		jwt.SigningMethodRS512,
 		claims,
-	).SignedString(key)
+	).SignedString(keyStore.GetDefaultKeyPair().Private)
 	return claims, signedJwt, err
 }
