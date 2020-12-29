@@ -9,3 +9,5 @@ services:
       - MONGO_DB_URL=mongodb://mongo:27017
   mongo:
     image: "mongo"
+    ports:
+      - "27017:27017"
